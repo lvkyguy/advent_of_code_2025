@@ -133,6 +133,50 @@ function groupCircuitsAndReturnProduct(points: Point[], connections: Connection[
 	return product;
 }
 
+function groupDownToSingleCircuitAndReturnProduct(points: Point[], connections: Connection[]): number {
+	let circuits = [];
+	points.forEach((point: Point) => {
+		circuits.push(new Circuit(point));
+	});
+
+	let lastConnection = null;
+	connections.forEach((conn: Connection) => {
+		if (circuits.length > 1)
+		{
+			let circuit1 = null;
+			circuits.forEach((cir: Circuit) => {
+				if (cir.isPointInCircuit(conn.point1))
+				{
+					circuit1 = cir;
+				}
+			});
+			if (!circuit1.isPointInCircuit(conn.point2))
+			{
+				let circuit2 = null;
+				let circuit2Index = -1;
+				for (let circuitIndex = 0; circuitIndex < circuits.length; circuitIndex++)
+				{
+					let cir = circuits[circuitIndex];
+					if (cir.isPointInCircuit(conn.point2))
+					{
+						circuit2 = cir;
+						circuit2Index = circuitIndex;
+					}
+				}
+				
+				// now merge circuit2 into circuit 1 and remove circuit 2 from list
+				circuit2.points.forEach((point: Point) => {
+					circuit1.addPoint(point);
+				});
+				circuits.splice(circuit2Index, 1);
+				lastConnection = conn;
+			}
+		}
+	});
+	
+	return lastConnection.point1.x * lastConnection.point2.x;
+}
+
 function joinCircuits(contents: string): number {
 	let points = parseCoordinates(contents);
 	let connections = [];
@@ -156,4 +200,21 @@ function joinCircuits(contents: string): number {
 	return groupCircuitsAndReturnProduct(points, chosenConnections, 3);
 }
 
+function joinIntoSingleCircuit(contents: string): number {
+	let points = parseCoordinates(contents);
+	let connections = [];
+	
+	for (let ii = 0; ii < points.length; ii++)
+	{
+		for (let jj = ii + 1; jj < points.length; jj++)
+		{
+			connections.push(new Connection(points[ii], points[jj]));
+		}
+	}
+	connections.sort((a,b) => a.distance - b.distance);
+
+	return groupDownToSingleCircuitAndReturnProduct(points, connections);
+}
+
 console.log(joinCircuits(inputContents));
+console.log(joinIntoSingleCircuit(inputContents));
