@@ -82,6 +82,26 @@ function parseCoordinates(contents: string): Point[] {
 	return points;
 }
 
+function mergeCircuit(circuits: Circuit[], conn: Connection, circuit1: Circuit) {
+	let circuit2 = null;
+	let circuit2Index = -1;
+	for (let circuitIndex = 0; circuitIndex < circuits.length; circuitIndex++)
+	{
+		let cir = circuits[circuitIndex];
+		if (cir.isPointInCircuit(conn.point2))
+		{
+			circuit2 = cir;
+			circuit2Index = circuitIndex;
+		}
+	}
+	
+	// now merge circuit2 into circuit 1 and remove circuit 2 from list
+	circuit2.points.forEach((point: Point) => {
+		circuit1.addPoint(point);
+	});
+	circuits.splice(circuit2Index, 1);
+}
+
 function groupCircuitsAndReturnProduct(points: Point[], connections: Connection[], countToMultiply: number): number {
 	// start with a circuit for every point, each circuit is an array of points
 	// loop over connections, for each one, merge the 2 circuits if the points are currently in separate circuits
@@ -98,29 +118,9 @@ function groupCircuitsAndReturnProduct(points: Point[], connections: Connection[
 				circuit1 = cir;
 			}
 		});
-		if (circuit1.isPointInCircuit(conn.point2))
+		if (!circuit1.isPointInCircuit(conn.point2))
 		{
-			// no merging needed
-		}
-		else
-		{
-			let circuit2 = null;
-			let circuit2Index = -1;
-			for (let circuitIndex = 0; circuitIndex < circuits.length; circuitIndex++)
-			{
-				let cir = circuits[circuitIndex];
-				if (cir.isPointInCircuit(conn.point2))
-				{
-					circuit2 = cir;
-					circuit2Index = circuitIndex;
-				}
-			}
-			
-			// now merge circuit2 into circuit 1 and remove circuit 2 from list
-			circuit2.points.forEach((point: Point) => {
-				circuit1.addPoint(point);
-			});
-			circuits.splice(circuit2Index, 1);
+			mergeCircuit(circuits, conn, circuit1);
 		}
 	});
 	
@@ -152,23 +152,7 @@ function groupDownToSingleCircuitAndReturnProduct(points: Point[], connections: 
 			});
 			if (!circuit1.isPointInCircuit(conn.point2))
 			{
-				let circuit2 = null;
-				let circuit2Index = -1;
-				for (let circuitIndex = 0; circuitIndex < circuits.length; circuitIndex++)
-				{
-					let cir = circuits[circuitIndex];
-					if (cir.isPointInCircuit(conn.point2))
-					{
-						circuit2 = cir;
-						circuit2Index = circuitIndex;
-					}
-				}
-				
-				// now merge circuit2 into circuit 1 and remove circuit 2 from list
-				circuit2.points.forEach((point: Point) => {
-					circuit1.addPoint(point);
-				});
-				circuits.splice(circuit2Index, 1);
+				mergeCircuit(circuits, conn, circuit1);
 				lastConnection = conn;
 			}
 		}
@@ -177,7 +161,7 @@ function groupDownToSingleCircuitAndReturnProduct(points: Point[], connections: 
 	return lastConnection.point1.x * lastConnection.point2.x;
 }
 
-function joinCircuits(contents: string): number {
+function joinCircuits(contents: string, connectionsToMake: number): number {
 	let points = parseCoordinates(contents);
 	let connections = [];
 	
@@ -190,14 +174,13 @@ function joinCircuits(contents: string): number {
 	}
 	connections.sort((a,b) => a.distance - b.distance);
 
-	let connectionsToMake = 1000;
-	let chosenConnections = [];
+	let rankedConnections = [];
 	for (let connectionIndex = 0; connectionIndex < connectionsToMake; connectionIndex++)
 	{
-		chosenConnections.push(connections[connectionIndex]);
+		rankedConnections.push(connections[connectionIndex]);
 	}
 	
-	return groupCircuitsAndReturnProduct(points, chosenConnections, 3);
+	return groupCircuitsAndReturnProduct(points, rankedConnections, 3);
 }
 
 function joinIntoSingleCircuit(contents: string): number {
@@ -216,5 +199,5 @@ function joinIntoSingleCircuit(contents: string): number {
 	return groupDownToSingleCircuitAndReturnProduct(points, connections);
 }
 
-console.log(joinCircuits(inputContents));
+console.log(joinCircuits(inputContents, 1000));
 console.log(joinIntoSingleCircuit(inputContents));
