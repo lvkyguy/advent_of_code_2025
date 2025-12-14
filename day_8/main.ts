@@ -30,11 +30,13 @@ class Point {
 class Connection {
 	public point1: Point;
 	public point2: Point;
+	public distance: number;
 
 	constructor(point1Param: Point, point2Param: Point)
 	{
 		this.point1 = point1Param;
 		this.point2 = point2Param;
+		this.distance = this.point1.calculateDistance(this.point2);
 	}
 	
 	public doesConnectionContainPoints(point1Param: Point, point2Param: Point)
@@ -135,61 +137,23 @@ function joinCircuits(contents: string): number {
 	let points = parseCoordinates(contents);
 	let connections = [];
 	
-	//console.log(points);
+	for (let ii = 0; ii < points.length; ii++)
+	{
+		for (let jj = ii + 1; jj < points.length; jj++)
+		{
+			connections.push(new Connection(points[ii], points[jj]));
+		}
+	}
+	connections.sort((a,b) => a.distance - b.distance);
 
 	let connectionsToMake = 1000;
+	let chosenConnections = [];
 	for (let connectionIndex = 0; connectionIndex < connectionsToMake; connectionIndex++)
 	{
-		let point1 = points[0];
-		let point1Index = -1;
-		let point2 = points[1];
-		let point2Index = -1;
-		let minDistance = 9999999999999999;
-		
-		for (let ii = 0; ii < points.length; ii++)
-		{
-			for (let jj = ii + 1; jj < points.length; jj++)
-			{
-				// check if this connection is already in the list
-				let connectionAlreadyExists = false;
-				for (let checkIndex = 0; checkIndex < connections.length; checkIndex++)
-				{
-					if (connections[checkIndex].doesConnectionContainPoints(points[ii], points[jj]))
-					{
-						connectionAlreadyExists = true;
-					}
-					//if (ii == 0 && jj == 19){
-					//	console.log(`Checking for 5, 19`);
-					//	console.log(connections[checkIndex]);
-					//	console.log(connectionAlreadyExists);
-					//}
-				}
-				if (!connectionAlreadyExists)
-				{
-					let currentDistance = points[ii].calculateDistance(points[jj]);
-				
-					if (currentDistance < minDistance)
-					{
-						point1 = points[ii];
-						point1Index = ii;
-						point2 = points[jj];
-						point2Index = jj;
-						minDistance = currentDistance;
-					}
-					//console.log(`${points[ii].x} ${points[ii].y} ${points[ii].z} `);
-				}
-			}
-		}
-		//console.log(point1Index);
-		//console.log(point1);
-		//console.log(point2Index);
-		//console.log(point2);
-		//console.log(minDistance);
-		connections.push(new Connection(point1, point2));
+		chosenConnections.push(connections[connectionIndex]);
 	}
-	console.log(connections);
 	
-	return groupCircuitsAndReturnProduct(points, connections, 3);
+	return groupCircuitsAndReturnProduct(points, chosenConnections, 3);
 }
 
 console.log(joinCircuits(inputContents));
