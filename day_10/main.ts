@@ -132,6 +132,12 @@ function countLightsOn(lights: boolean[]): number {
 }
 
 function findMinJoltagePressesAlt3(joltage: Joltage, buttons: Button[], buttonsPressed: number, bestSolutionSoFar: number, currentSolutionString: string, bestSolutionString: string): number {
+	// order buttons by putting those with the least frequent light indexes first, use size as tie-breaker
+	// apply button and call recursively
+	
+	// or, order buttons by the ones that hit the most indexes, apply and call recursively
+	
+	
 	if (joltage.remaining == 0)
 	{
 		console.log('found_solution!!!  ' + '   ' + bestSolutionSoFar + '    ' + buttonsPressed + currentSolutionString);
